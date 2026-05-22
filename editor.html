@@ -610,16 +610,7 @@ const CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const ENHARMONIC = {'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#','C#':'C#','D#':'D#','F#':'F#','G#':'G#','A#':'A#'};
 
 // ── DATA ──
-let songs = [{
-  id: 1, name: 'Tamo Daleko',
-  tonalities: [
-    {id:101, name:'Am (original)', chords:{}},
-    {id:102, name:'Dm (transpozicija)', chords:{}},
-    {id:103, name:'Em (gitara)', chords:{}}
-  ],
-  activeTonality: 101,
-  text: `Tamo daleko daleko kraj mora\nTamo je selo moje tamo je Srbija\nTamo daleko daleko kraj mora\nGde cveća ima gde pesma odzvanja\n\nTamo daleko gde sunce ne sija\nJa čamim tužan u tmini daleko\nTamo daleko daleko kraj mora\nTu srce moje i dan danas plaka`
-}];
+let songs = [];
 let activeSongId = null;
 let editMode = 'chords';
 let setlists = [];
@@ -1196,9 +1187,9 @@ document.addEventListener('click',e=>{
 });
 
 // ── INIT ──
-const loaded=loadFromStorage();
-if(!loaded){
-  songs[0].tonalities[0].chords={'0_0':'Am','0_2':'Dm','0_3':'E','1_0':'Am','1_3':'G','2_0':'Am','2_2':'Dm','2_3':'E','4_0':'Am','4_2':'F','4_3':'G','5_0':'E'};
+const loaded = loadFromStorage();
+if (!loaded) {
+  songs = [];
 }
 snapshot(); updateUndoRedoBtns(); renderSidebar();
 if(activeSongId&&songs.find(s=>s.id===activeSongId)) selectSong(activeSongId);
