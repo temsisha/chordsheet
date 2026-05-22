@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Naruči pesmu 🎸</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #1a1a1a;
+    --bg3: #242424;
+    --border: #2e2e2e;
+    --text: #ffffff;
+    --text-muted: #888;
+    --accent: #328EFC;
+    --accent-hover: #1a7de8;
+    --accent-dim: rgba(50,142,252,0.15);
+    --success: #3dba6f;
+    --danger: #e84040;
+    --font-ui: 'Segoe UI', system-ui, sans-serif;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .header .icon {
+    font-size: 2.8rem;
+    margin-bottom: 10px;
+    display: block;
+    animation: sway 2s ease-in-out infinite;
+  }
+  @keyframes sway {
+    0%,100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+  }
+  .header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .header p {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 7px;
+    font-weight: 600;
+  }
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: 1rem;
+    padding: 13px 15px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(50,142,252,0.15);
+  }
+  .form-group input::placeholder,
+  .form-group textarea::placeholder { color: #555; }
+  .form-group textarea {
+    resize: none;
+    height: 90px;
+    line-height: 1.5;
+  }
+
+  /* Song search */
+  .search-results {
+    margin-top: 6px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    display: none;
+  }
+  .search-results.visible { display: block; }
+  .search-result-item {
+    padding: 11px 15px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover { background: var(--accent-dim); }
+  .search-result-item .song-icon { opacity: 0.4; }
+  .search-result-item .in-db {
+    margin-left: auto;
+    font-size: 0.68rem;
+    color: var(--success);
+    background: rgba(61,186,111,0.12);
+    border: 1px solid rgba(61,186,111,0.3);
+    border-radius: 8px;
+    padding: 2px 7px;
+  }
+  .no-songs-hint {
+    padding: 12px 15px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: var(--font-ui);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    margin-top: 8px;
+    letter-spacing: 0.02em;
+  }
+  .submit-btn:hover { background: var(--accent-hover); }
+  .submit-btn:active { transform: scale(0.98); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* Success state */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+  }
+  .success-screen .check {
+    font-size: 3.5rem;
+    margin-bottom: 16px;
+    display: block;
+    animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes pop {
+    from { transform: scale(0); }
+    to   { transform: scale(1); }
+  }
+  .success-screen h2 { font-size: 1.4rem; margin-bottom: 10px; }
+  .success-screen p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
+  .success-screen .song-requested {
+    margin: 18px 0;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent);
+    font-family: var(--font-mono);
+  }
+  .new-request-btn {
+    margin-top: 20px;
+    padding: 11px 24px;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-muted);
+    font-family: var(--font-ui);
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .new-request-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Error banner */
+  .error-banner {
+    background: rgba(232,64,64,0.12);
+    border: 1px solid rgba(232,64,64,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: var(--danger);
+    margin-bottom: 14px;
+    display: none;
+    text-align: center;
+  }
+  .error-banner.visible { display: block; }
+
+  .powered {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 0.68rem;
+    color: #333;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <span class="icon">🎸</span>
+    <h1>Naruči pesmu</h1>
+    <p>Upiši svoje ime i naziv pesme koju želiš da čuješ večeras</p>
+  </div>
+
+  <div id="errorBanner" class="error-banner"></div>
+
+  <div id="formScreen">
+    <div class="form-group">
+      <label>Tvoje ime</label>
+      <input type="text" id="guestName" placeholder="npr. Marko, Ana..." maxlength="50" autocomplete="off"/>
+    </div>
+
+    <div class="form-group">
+      <label>Naziv pesme</label>
+      <input type="text" id="songSearch" placeholder="Pretraži ili upiši naziv..."
+        oninput="onSongSearch(this.value)" autocomplete="off" autocorrect="off"/>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Poruka <span style="color:#555;font-weight:400;text-transform:none;letter-spacing:0">(opciono)</span></label>
+      <textarea id="guestMessage" placeholder="Pozdrav, posebna prigoda, dedikacija..."></textarea>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitRequest()">
+      🎵 Naruči pesmu
+    </button>
+  </div>
+
+  <div class="success-screen" id="successScreen">
+    <span class="check">✅</span>
+    <h2>Narudžbina primljena!</h2>
+    <div class="song-requested" id="successSongName"></div>
+    <p>Muzičar je obavešten o tvojoj narudžbini.<br>Hvala na narudžbini!</p>
+    <button class="new-request-btn" onclick="resetForm()">+ Naruči još jednu</button>
+  </div>
+</div>
+
+<div class="powered">powered by ChordSheet</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAiFgVGRD6VC1NX1k5ndjn-q8m0Wq9b074",
+  authDomain: "chordsheet-c9de5.firebaseapp.com",
+  databaseURL: "https://chordsheet-c9de5-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "chordsheet-c9de5",
+  storageBucket: "chordsheet-c9de5.appspot.com",
+  messagingSenderId: "1234567890",
+  appId: "placeholder"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Song list loaded from Firebase (published by musician)
+let songList = [];
+
+// Load public song list
+import { onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+const songsRef = ref(db, 'public/songs');
+onValue(songsRef, (snap) => {
+  const data = snap.val();
+  if (data && Array.isArray(data)) {
+    songList = data;
+  } else if (data && typeof data === 'object') {
+    songList = Object.values(data);
+  }
+});
+
+// Search songs
+window.onSongSearch = function(val) {
+  const q = val.trim().toLowerCase();
+  const resultsEl = document.getElementById('searchResults');
+
+  if (!q || q.length < 1) {
+    resultsEl.classList.remove('visible');
+    resultsEl.innerHTML = '';
+    return;
+  }
+
+  const matches = songList.filter(s => s.toLowerCase().includes(q));
+
+  if (matches.length === 0) {
+    resultsEl.innerHTML = `<div class="no-songs-hint">Nije pronađena u bazi — možeš svejedno naručiti ✌️</div>`;
+    resultsEl.classList.add('visible');
+    return;
+  }
+
+  resultsEl.innerHTML = matches.slice(0, 6).map(s => `
+    <div class="search-result-item" onclick="selectSong('${s.replace(/'/g,"\\'")}')">
+      <span class="song-icon">♪</span>
+      <span>${escHtml(s)}</span>
+      <span class="in-db">u bazi ✓</span>
+    </div>
+  `).join('');
+  resultsEl.classList.add('visible');
+};
+
+window.selectSong = function(name) {
+  document.getElementById('songSearch').value = name;
+  document.getElementById('searchResults').classList.remove('visible');
+  document.getElementById('searchResults').innerHTML = '';
+};
+
+// Submit
+window.submitRequest = async function() {
+  const name = document.getElementById('guestName').value.trim();
+  const song = document.getElementById('songSearch').value.trim();
+  const message = document.getElementById('guestMessage').value.trim();
+  const errorBanner = document.getElementById('errorBanner');
+
+  errorBanner.classList.remove('visible');
+
+  if (!name) {
+    showError('Upiši svoje ime 👆');
+    document.getElementById('guestName').focus();
+    return;
+  }
+  if (!song) {
+    showError('Upiši naziv pesme 👆');
+    document.getElementById('songSearch').focus();
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Slanje...';
+
+  try {
+    // Check if song is in db
+    const inDb = songList.some(s => s.toLowerCase() === song.toLowerCase());
+
+    await push(ref(db, 'requests'), {
+      guestName: name,
+      songName: song,
+      message: message || null,
+      inDb: inDb,
+      status: 'pending',
+      timestamp: serverTimestamp()
+    });
+
+    // Show success
+    document.getElementById('successSongName').textContent = '♪ ' + song;
+    document.getElementById('formScreen').style.display = 'none';
+    document.getElementById('successScreen').style.display = 'block';
+
+  } catch(err) {
+    showError('Greška pri slanju. Pokušaj ponovo.');
+    console.error(err);
+    btn.disabled = false;
+    btn.textContent = '🎵 Naruči pesmu';
+  }
+};
+
+window.resetForm = function() {
+  document.getElementById('guestName').value = '';
+  document.getElementById('songSearch').value = '';
+  document.getElementById('guestMessage').value = '';
+  document.getElementById('formScreen').style.display = 'block';
+  document.getElementById('successScreen').style.display = 'none';
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').textContent = '🎵 Naruči pesmu';
+  document.getElementById('errorBanner').classList.remove('visible');
+};
+
+function showError(msg) {
+  const el = document.getElementById('errorBanner');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Close search on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#songSearch') && !e.target.closest('#searchResults')) {
+    document.getElementById('searchResults').classList.remove('visible');
+  }
+});
+</script>
+</body>
+</html>

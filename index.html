@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ChordSheet</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #1a1a1a;
+    --bg3: #222;
+    --border: #2e2e2e;
+    --text: #ffffff;
+    --text-muted: #888;
+    --accent: #328EFC;
+    --accent-hover: #1a7de8;
+    --accent-dim: rgba(50,142,252,0.15);
+    --danger: #e84040;
+    --success: #3dba6f;
+    --font-mono: 'Consolas', 'Courier New', monospace;
+    --font-ui: 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+  .logo-icon {
+    font-size: 3.5rem;
+    display: block;
+    margin-bottom: 14px;
+    animation: sway 3s ease-in-out infinite;
+  }
+  @keyframes sway {
+    0%,100% { transform: rotate(-4deg); }
+    50% { transform: rotate(4deg); }
+  }
+  .logo h1 {
+    font-family: var(--font-mono);
+    font-size: 2rem;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .logo p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .cards {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 560px;
+    width: 100%;
+  }
+
+  .card {
+    flex: 1;
+    min-width: 220px;
+    max-width: 260px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.2s, transform 0.15s, background 0.2s;
+    position: relative;
+    display: block;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    background: #1e1e1e;
+    transform: translateY(-3px);
+  }
+  .card:active { transform: translateY(-1px); }
+
+  .card.nastup {
+    border-color: rgba(50,142,252,0.4);
+    background: linear-gradient(145deg, #1a2540, #1a1a1a);
+  }
+  .card.nastup:hover {
+    border-color: var(--accent);
+    background: linear-gradient(145deg, #1e2d4e, #1e1e1e);
+  }
+
+  .card-icon { font-size: 2.8rem; margin-bottom: 16px; display: block; }
+
+  .card h2 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .card p {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .card.nastup p { color: #93c5fd; }
+
+  .badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 12px;
+    padding: 3px 10px;
+    min-width: 24px;
+    text-align: center;
+    display: none;
+    animation: pop 0.3s cubic-bezier(0.175,0.885,0.32,1.275);
+  }
+  .badge.visible { display: block; }
+  @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+
+  .card-arrow {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 1.2rem;
+    color: var(--accent);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+
+  .version {
+    position: fixed;
+    bottom: 20px;
+    font-size: 0.68rem;
+    color: #333;
+    font-family: var(--font-mono);
+  }
+</style>
+</head>
+<body>
+
+<div class="logo">
+  <span class="logo-icon">🎸</span>
+  <h1>ChordSheet</h1>
+  <p>Tvoj digitalni notni list</p>
+</div>
+
+<div class="cards">
+  <a href="editor.html" class="card">
+    <span class="card-icon">📝</span>
+    <h2>Editor</h2>
+    <p>Uređivanje pesama,<br>akordi i setliste</p>
+    <span class="card-arrow">→</span>
+  </a>
+
+  <a href="nastup.html" class="card nastup">
+    <span class="badge" id="reqBadge">0</span>
+    <span class="card-icon">🎸</span>
+    <h2>Nastup</h2>
+    <p>Svirka, setlista<br>i narudžbine</p>
+    <span class="card-arrow">→</span>
+  </a>
+</div>
+
+<div class="version">ChordSheet v2.0</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyAiFgVGRD6VC1NX1k5ndjn-q8m0Wq9b074",
+  authDomain: "chordsheet-c9de5.firebaseapp.com",
+  databaseURL: "https://chordsheet-c9de5-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "chordsheet-c9de5",
+  storageBucket: "chordsheet-c9de5.appspot.com",
+  messagingSenderId: "1234567890",
+  appId: "placeholder"
+});
+const db = getDatabase(app);
+
+onValue(ref(db, 'requests'), snap => {
+  let count = 0;
+  if (snap.exists()) {
+    snap.forEach(c => {
+      const v = c.val();
+      if (v.status !== 'done' && v.status !== 'deleted') count++;
+    });
+  }
+  const badge = document.getElementById('reqBadge');
+  badge.textContent = count;
+  badge.classList.toggle('visible', count > 0);
+});
+</script>
+</body>
+</html>
